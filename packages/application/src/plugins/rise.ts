@@ -886,9 +886,7 @@ namespace Rise {
     // Attempt to load css with the same path as notebook
     document.head.insertAdjacentHTML(
       'beforeend',
-      `<link rel="stylesheet" href="${PageConfig.getOption(
-        'fullStaticUrl'
-      )}/${name_css}" id="rise-notebook-css" />`
+      `<link rel="stylesheet" href="${PageConfig.getBaseUrl()}/${name_css}" id="rise-notebook-css" />`
     );
 
     // Asynchronously import reveal

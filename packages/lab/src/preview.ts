@@ -13,6 +13,8 @@ import {
 
 import { INotebookModel } from '@jupyterlab/notebook';
 
+import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+
 import { refreshIcon } from '@jupyterlab/ui-components';
 
 import { CommandRegistry } from '@lumino/commands';
@@ -25,7 +27,7 @@ import { Signal } from '@lumino/signaling';
 
 import { Widget } from '@lumino/widgets';
 
-import { RISEIcon } from './icons';
+import { fullScreenIcon, RISEIcon } from './icons';
 
 /**
  * A class that tracks Rise Preview widgets.
@@ -62,9 +64,11 @@ export class RisePreview extends DocumentWidget<IFrame, INotebookModel> {
       })
     });
 
-    const { getRiseUrl, context, renderOnSave } = options;
+    const { getRiseUrl, context, renderOnSave, translator } = options;
     this.getRiseUrl = getRiseUrl;
     this._path = context.path;
+
+    const trans = (translator ?? nullTranslator).load('rise');
 
     this.content.title.icon = RISEIcon;
 
@@ -76,7 +80,7 @@ export class RisePreview extends DocumentWidget<IFrame, INotebookModel> {
 
     const reloadButton = new ToolbarButton({
       icon: refreshIcon,
-      tooltip: 'Reload Preview',
+      tooltip: trans.__('Reload Preview'),
       onClick: () => {
         this.reload();
       }
@@ -86,16 +90,17 @@ export class RisePreview extends DocumentWidget<IFrame, INotebookModel> {
       checked: this._renderOnSave,
       onChange: (event: Event) => {
         this._renderOnSave = (event.target as any)?.checked ?? false;
-      }
+      },
+      translator
     });
 
     this.toolbar.addItem(
-      'open',
+      'fullscreen',
       new ToolbarButton({
-        icon: RISEIcon,
-        tooltip: 'Open in a new browser tab',
+        icon: fullScreenIcon,
+        tooltip: trans.__('Open the slideshow in full screen'),
         onClick: () => {
-          options.commands.execute('RISE:slideshow');
+          options.commands.execute('RISE:fullscreen-plugin');
         }
       })
     );
@@ -242,6 +247,10 @@ namespace Private {
        * Callback on checked status changes
        */
       onChange?: (ev: Event) => void;
+      /**
+       * Translator
+       */
+      translator?: ITranslator;
     }
   }
 
@@ -250,10 +259,13 @@ namespace Private {
    */
   export class CheckBox extends Widget {
     constructor(options: CheckBox.IOptions = {}) {
+      const trans = (options.translator ?? nullTranslator).load('rise');
       const node = document.createElement('label');
       node.insertAdjacentHTML(
         'afterbegin',
-        '<input name="renderOnSave" type="checkbox"></input>Render on Save'
+        `<input name="renderOnSave" type="checkbox"></input>${trans.__(
+          'Render on Save'
+        )}`
       );
       super({ node });
       this.input = node.childNodes.item(0) as HTMLInputElement;
